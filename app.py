@@ -6,9 +6,9 @@ from langchain.llms import CTransformers
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from src.helper import *
+from flask import Flask, render_template, jsonify, request
 
-
-
+app = Flask(__name__)
 
 ## loading the data
 loader = DirectoryLoader(path='data/', 
@@ -45,12 +45,33 @@ chain = RetrievalQA.from_chain_type(llm=llm,
                     return_source_documents=False,
                     chain_type_kwargs={'prompt': qa_prompt})
 
-user_input='Tell me about Ontology'
+# user_input='Tell me about Ontology'
 
-result = chain({'query':user_input})
-print(f'answer:{result["result"]}')
+# result = chain({'query':user_input})
+# print(f'answer:{result["result"]}')
+
+@app.route('/', methods=["GET","POST"])
+def index():
+    return render_template('index.html', **locals())
+
+@app.route('/chatbot', methods=['GET','POST'])
+def chatbotResponse():
+
+    if request.method == 'POST':
+        user_input=request.form['question']
+        print(user_input)
+
+        result = chain({'query':user_input})
+        print(f'answer:{result["result"]}')
+    
+    return jsonify({'response':str(result["result"])})
 
 
+
+
+
+if __name__=='__main__':
+    app.run(host='0.0.0.0', port=8080, debug=True)
 
 
 
